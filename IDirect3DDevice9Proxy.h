@@ -1,6 +1,8 @@
 #pragma once
 
 #include "defines.h"
+#include <d3dx9core.h>
+#include <string>
 
 class IDirect3DDevice9Proxy :
 	public IDirect3DDevice9
@@ -133,7 +135,11 @@ public:
 	static IDirect3DDevice9Proxy *lastDevice;
 
 	static void* callbacks[D3D9_DEVICE_FUNC_COUNT];
-private:
+
+	void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR, int, int, int, int, std::string);
+	LPD3DXFONT m_font;
 	IDirect3DDevice9 *origIDirect3DDevice9;
+private:
+	
 };
 

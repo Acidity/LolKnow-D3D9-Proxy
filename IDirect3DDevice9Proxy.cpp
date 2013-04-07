@@ -1,4 +1,5 @@
 #include "IDirect3DDevice9Proxy.h"
+#include "LolKnow.h"
 
 IDirect3DDevice9Proxy *IDirect3DDevice9Proxy::lastDevice = NULL;
 
@@ -130,6 +131,17 @@ HRESULT IDirect3DDevice9Proxy::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 }
 
 HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion){
+	if(LolKnow::completedDataTransfer)
+	{
+		//Display data
+		DisplayText(D3DCOLOR_ARGB(255,255,0,0), 850, 10, 220, 30, "LolKnow Development Build");
+		DisplayText(D3DCOLOR_ARGB(255,0,0,255), 850, 40, 220, 30, LolKnow::teamOne.at(0).champion);
+		DisplayText(D3DCOLOR_ARGB(255,0,0,255), 850, 70, 220, 30, LolKnow::teamOne.at(0).tier + " " + LolKnow::teamOne.at(0).rank);
+		stringstream ss;
+		ss << LolKnow::teamOne.at(0).kills << "/" << LolKnow::teamOne.at(0).deaths << "/" << LolKnow::teamOne.at(0).assists;
+		DisplayText(D3DCOLOR_ARGB(255,0,0,255), 850, 70, 220, 30, ss.str());
+	}
+	
 	HRESULT res = (origIDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion));
 	if (callbacks[POSTPRESENT])
 		((D3D9DevicePostPresentFunc)callbacks[POSTPRESENT])(this, res);
@@ -594,4 +606,23 @@ HRESULT IDirect3DDevice9Proxy::DeletePatch(UINT Handle)
 HRESULT IDirect3DDevice9Proxy::CreateQuery(D3DQUERYTYPE Type,IDirect3DQuery9** ppQuery)
 {
 	return(origIDirect3DDevice9->CreateQuery(Type,ppQuery));
+}
+
+void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR fontColor, int x, int y, int width, int height, string text)
+{
+	if(!LolKnow::fontCreated)
+	{
+		D3DXCreateFont( origIDirect3DDevice9, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &m_font );
+		LolKnow::fontCreated = true;
+	}
+// Create a rectangle to indicate where on the screen it should be drawn
+RECT rct;
+rct.left=x;
+rct.right=x+width;
+rct.top=y;
+rct.bottom=y+height;
+ 
+// Draw some text 
+m_font->DrawText(NULL, text.c_str(), -1, &rct, 0, fontColor );
+
 }

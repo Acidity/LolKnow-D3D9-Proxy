@@ -1,5 +1,8 @@
 #include "defines.h"
 #include "IDirect3D9Proxy.h"
+#include <thread>
+#include "LolKnow.h"
+#include <d3dx9core.h>
 
 #pragma pack(1)
 HINSTANCE hlThis = 0;
@@ -37,6 +40,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID){
 		origProc[11] = GetProcAddress(hlD3D9, "Direct3DShaderValidatorCreate9");
 		origProc[12] = GetProcAddress(hlD3D9, "PSGPError");
 		origProc[13] = GetProcAddress(hlD3D9, "PSGPSampleTexture");
+		LolKnow::retrieveDataFromMain();
 	}else if (reason == DLL_PROCESS_DETACH){
 		FreeLibrary(hlD3D9);
 	}
