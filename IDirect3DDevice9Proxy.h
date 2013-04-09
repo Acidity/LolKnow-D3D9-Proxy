@@ -137,9 +137,12 @@ public:
 	static void* callbacks[D3D9_DEVICE_FUNC_COUNT];
 
 	void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR, int, int, int, int, std::string);
+	void IDirect3DDevice9Proxy::DisplayData(int, int, int, int);
 	LPD3DXFONT m_font;
 	IDirect3DDevice9 *origIDirect3DDevice9;
 private:
-	
+	HDC* m_hdc;
+	HDC* m_hdc2;
+	HDC* m_hdc3;
 };
 

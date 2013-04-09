@@ -85,8 +85,8 @@ void LolKnow::handleInputData(string line)
 		case 1: (*s).champion = line; break;
 		case 2: (*s).name = line; break;
 		case 3: try { ss << line; ss >> (*s).queueGroup; }catch(...){} break; //TODO Handle exceptions relating to line not holding a number
-		case 4: (*s).tier = line; break;
-		case 5: (*s).rank = line; break;
+		case 4: if(line != "") { (*s).tier = line; }; break;
+		case 5: if(line != "") { (*s).rank = line; }; break;
 		case 6: try { ss << line; ss >> (*s).kills;  }catch(...){} break;//TODO Handle exceptions relating to line not holding a number
 		case 7: try { ss << line; ss >> (*s).deaths;  }catch(...){} break;//TODO Handle exceptions relating to line not holding a number
 		case 8: try { ss << line; ss >> (*s).assists;  }catch(...){} break;//TODO Handle exceptions relating to line not holding a number
