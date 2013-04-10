@@ -1,5 +1,6 @@
 #include "IDirect3DDevice9Proxy.h"
 #include "LolKnow.h"
+#include <thread>
 
 IDirect3DDevice9Proxy *IDirect3DDevice9Proxy::lastDevice = NULL;
 
@@ -131,16 +132,23 @@ HRESULT IDirect3DDevice9Proxy::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 }
 
 HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion){
+	DisplayText(D3DCOLOR_ARGB(255,255,0,0), 850, 10, 220, 25, "LolKnow Development Build");
+	if(!LolKnow::hasCreatedThread)
+	{
+		std::thread t1(LolKnow::timerCheckForData, 250);
+		t1.detach();
+		LolKnow::hasCreatedThread = true;
+	}
+	
 	if(LolKnow::completedDataTransfer)
 	{
 		//Display data
-		DisplayText(D3DCOLOR_ARGB(255,255,0,0), 850, 10, 220, 25, "LolKnow Development Build");
 		stringstream ss;
 		IDirect3DSurface9* m_surface;
 		origIDirect3DDevice9->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&m_surface);
 		HDC hdc;
-	/*	(*m_surface).GetDC(&hdc);
-		ss << &hdc;
+		(*m_surface).GetDC(&hdc);
+/*		ss << &hdc;
 		DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 0, 200, 25, ss.str());
 		ss = stringstream();
 		ss << m_hdc;
@@ -157,7 +165,7 @@ HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 			for(int x = 0; x < LolKnow::teamOne.size(); x++)
 				DisplayData(1,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),35);
 			for(int x = 0; x < LolKnow::teamTwo.size(); x++)
-				DisplayData(2,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),970);
+				DisplayData(2,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),955);
 		}
 		m_hdc3 = m_hdc2;
 		m_hdc2 = m_hdc;
@@ -657,15 +665,61 @@ void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
 	//Champion that they're playing
 	//DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y, 220, 25, s.champion);
 
+	D3DCOLOR color = D3DCOLOR_ARGB(255,255,255,255);;
+
+	D3DCOLOR nameColor;
+	//Changes color for queue groups, applies to names only
+	switch(s.queueGroup) {
+	case 0: nameColor = D3DCOLOR_ARGB(255,255,255,255); break;
+	case 1: nameColor = D3DCOLOR_ARGB(255,255,0,0); break;
+	case 2: nameColor = D3DCOLOR_ARGB(255,0,255,0); break;
+	case 3: nameColor = D3DCOLOR_ARGB(255,0,0,255); break;
+	case 4: nameColor = D3DCOLOR_ARGB(255,0,255,255); break;
+	default: nameColor = D3DCOLOR_ARGB(255,255,255,255); break;
+	}
 	//Solo Queue Rank and tier
-	DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y, 220, 25, s.tier + " " + s.rank);
+	DisplayText(nameColor, x, y, 220, 25, s.name); //TODO: color based on their rank
+
+	D3DCOLOR rankColor;
+	//Changes color for queue groups, applies to names only
+	if(s.tier == "BRONZE")
+	{
+		rankColor = D3DCOLOR_ARGB(255,108,84,30);
+	}
+	else if(s.tier == "SILVER")
+	{
+		rankColor = D3DCOLOR_ARGB(255,192,192,192);
+	}
+	else if(s.tier == "GOLD")
+	{
+		rankColor = D3DCOLOR_ARGB(255,255,215,0);
+	}
+	else if(s.tier == "PLATINUM")
+	{
+		rankColor = D3DCOLOR_ARGB(255,229,228,226);
+	}
+	else if(s.tier == "DIAMOND")
+	{
+		rankColor = D3DCOLOR_ARGB(255,185,242,255);
+	}
+	else if(s.tier == "CHALLENGER")
+	{
+		rankColor = D3DCOLOR_ARGB(255,255,255,0);
+	}
+	else
+	{
+		rankColor = D3DCOLOR_ARGB(255,255,255,255);
+	}
+
+	//Solo Queue Rank and tier
+	DisplayText(rankColor, x, y+25, 220, 25, s.tier + " " + s.rank);
 
 	//General ranked KDA
 	stringstream ss;
 	if(s.kills != -1 || s.deaths != -1 || s.assists != -1)
 	{
 		ss << s.kills << "/" << s.deaths << "/" << s.assists;
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y+25, 220, 25, ss.str());
+		DisplayText(color, x, y+50, 220, 25, ss.str()); //TODO: color kills green, deaths red, assists blue
 	}
 
 	//General Ranked W/L
@@ -673,7 +727,7 @@ void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
 	{
 		ss = stringstream();
 		ss << s.wins << "W/" << s.losses << "L";
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y+50, 220, 25, ss.str());
+		DisplayText(color, x, y+75, 220, 25, ss.str()); //TODO: color wins green, loses red
 	}
 
 	//Champion specific KDA and games played
@@ -681,6 +735,6 @@ void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
 	{
 		ss = stringstream();
 		ss << s.champKills << "/" << s.champDeaths << "/" << s.champAssists << " - " << s.champPlayed << "P";
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y+75, 220, 25, ss.str());
+		DisplayText(color, x, y+100, 220, 25, ss.str()); //TODO: color kills green, deaths red, assists blue
 	}
 }

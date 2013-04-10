@@ -1,4 +1,5 @@
 #include "LolKnow.h"
+#include "Windows.h"
 
 using namespace std;
 
@@ -8,6 +9,7 @@ int LolKnow::currentTeam = 1;
 int LolKnow::lineNumber = 0;
 bool LolKnow::completedDataTransfer = false;
 bool LolKnow::fontCreated = false;
+bool LolKnow::hasCreatedThread = false;
 
 LolKnow::LolKnow(void)
 {
@@ -18,6 +20,26 @@ LolKnow::LolKnow(void)
 LolKnow::~LolKnow(void)
 {
 
+}
+
+void LolKnow::timerCheckForData(long millis)
+{
+	while(!checkIfDataAvailable())
+	{
+		Sleep(millis);
+	}
+}
+
+bool LolKnow::checkIfDataAvailable()
+{
+	ifstream input;
+	input.open("Temp.txt", ios::in); 
+	if(input)
+	{
+		retrieveDataFromMain();
+		return true;
+	}
+	return false;
 }
 
 void LolKnow::retrieveDataFromMain()
@@ -47,11 +69,13 @@ void LolKnow::handleInputData(string line)
 	if(line == "//BEGIN TEAM ONE")
 	{
 		currentTeam = 1;
+		lineNumber = 0;
 		return;
 	}
 	if(line == "//BEGIN TEAM TWO")
 	{
 		currentTeam = 2;
+		lineNumber = 0;
 		return;
 	}
 	if(line == "-----")
