@@ -33,6 +33,7 @@ extern "C" UINT WINAPI D3D9DeviceFuncUnHook(UINT funcId){
 IDirect3DDevice9Proxy::IDirect3DDevice9Proxy(IDirect3DDevice9* pOriginal){
 	origIDirect3DDevice9 = pOriginal; // store the pointer to original object
 	lastDevice = this;
+	fontCreated = false;
 }
 
 IDirect3DDevice9Proxy::~IDirect3DDevice9Proxy(void){
@@ -132,50 +133,69 @@ HRESULT IDirect3DDevice9Proxy::Reset(D3DPRESENT_PARAMETERS* pPresentationParamet
 }
 
 HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDestRect, HWND hDestWindowOverride, CONST RGNDATA* pDirtyRegion){
-	DisplayText(D3DCOLOR_ARGB(255,255,0,0), 850, 10, 220, 25, "LolKnow Development Build");
-	if(!LolKnow::hasCreatedThread)
-	{
-		std::thread t1(LolKnow::timerCheckForData, 250);
-		t1.detach();
-		LolKnow::hasCreatedThread = true;
-	}
 	
-	if(LolKnow::completedDataTransfer)
+	if(origIDirect3DDevice9->TestCooperativeLevel() == D3D_OK)
 	{
-		//Display data
-		stringstream ss;
-		IDirect3DSurface9* m_surface;
-		origIDirect3DDevice9->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&m_surface);
-		HDC hdc;
-		(*m_surface).GetDC(&hdc);
-/*		ss << &hdc;
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 0, 200, 25, ss.str());
-		ss = stringstream();
-		ss << m_hdc;
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 25, 200, 25, ss.str());
-		ss = stringstream();
-		ss << m_hdc2;
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 50, 200, 25, ss.str());
-		ss = stringstream();
-		ss << m_hdc3;
-		DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 75, 200, 25, ss.str()); */
-
-		if(&hdc != m_hdc || &hdc != m_hdc2 || &hdc != m_hdc3)
+		DisplayText(D3DCOLOR_ARGB(255,255,0,0), 850, 0, 220, 25, "LolKnow Development Build");
+		if(!LolKnow::hasCreatedThread)
 		{
-			for(int x = 0; x < LolKnow::teamOne.size(); x++)
-				DisplayData(1,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),35);
-			for(int x = 0; x < LolKnow::teamTwo.size(); x++)
-				DisplayData(2,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),955);
+			std::thread t1(LolKnow::timerCheckForData, 250);
+			t1.detach();
+			LolKnow::hasCreatedThread = true;
 		}
-		m_hdc3 = m_hdc2;
-		m_hdc2 = m_hdc;
-		m_hdc = &hdc;
-		m_surface->Release();
+		
+		if(LolKnow::completedDataTransfer)
+		{
+			//Display data
+			stringstream ss;
+
+			IDirect3DSurface9* m_surface;
+			origIDirect3DDevice9->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&m_surface);
+			HDC hdc;
+			(*m_surface).GetDC(&hdc);
+			
+			bool isIdentical = true;
+
+			ss << &hdc;
+			DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 0, 200, 25, ss.str());
+
+			for(int x = 0; x < m_hdc.size(); x++)
+			{
+				ss = stringstream();
+				ss << m_hdc.at(x);
+				DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 50+(25*x), 200, 25, ss.str());
+
+				if(&hdc != m_hdc.at(x))
+				{
+					isIdentical = false;
+				}
+			}
+
+			if(!isIdentical)
+			{
+				for(int x = 0; x < LolKnow::teamOne.size(); x++)
+					DisplayData(1,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),35);
+				for(int x = 0; x < LolKnow::teamTwo.size(); x++)
+					DisplayData(2,x,(1720/(LolKnow::teamOne.size()+1))*(x+1),955);
+			}
+			if(m_hdc.size() < 10)
+			{
+				m_hdc.push_back(&hdc);
+			}
+			else
+			{
+				m_hdc.insert(m_hdc.begin(), &hdc);
+				m_hdc.pop_back();
+			}
+			m_surface->Release();
+		}
 	}
 	
 	HRESULT res = (origIDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion));
+
 	if (callbacks[POSTPRESENT])
 		((D3D9DevicePostPresentFunc)callbacks[POSTPRESENT])(this, res);
+
 	return res;
 }
 
@@ -641,10 +661,10 @@ HRESULT IDirect3DDevice9Proxy::CreateQuery(D3DQUERYTYPE Type,IDirect3DQuery9** p
 
 void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR fontColor, int x, int y, int width, int height, string text)
 {
-	if(!LolKnow::fontCreated)
+	if(!fontCreated)
 	{
 		D3DXCreateFont( origIDirect3DDevice9, 20, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &m_font );
-		LolKnow::fontCreated = true;
+		fontCreated = true;
 	}
 	// Create a rectangle to indicate where on the screen it should be drawn
 	RECT rct;
@@ -655,7 +675,6 @@ void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR fontColor, int x, int y, int wi
 
 	// Draw some text 
 	m_font->DrawText(NULL, text.c_str(), -1, &rct, 0, fontColor );
-
 }
 
 void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
@@ -665,7 +684,7 @@ void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
 	//Champion that they're playing
 	//DisplayText(D3DCOLOR_ARGB(255,255,255,255), x, y, 220, 25, s.champion);
 
-	D3DCOLOR color = D3DCOLOR_ARGB(255,255,255,255);;
+	D3DCOLOR color = D3DCOLOR_ARGB(255,255,255,255);
 
 	D3DCOLOR nameColor;
 	//Changes color for queue groups, applies to names only

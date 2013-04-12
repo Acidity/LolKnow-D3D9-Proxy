@@ -3,6 +3,7 @@
 #include "defines.h"
 #include <d3dx9core.h>
 #include <string>
+#include <vector>
 
 class IDirect3DDevice9Proxy :
 	public IDirect3DDevice9
@@ -140,9 +141,8 @@ public:
 	void IDirect3DDevice9Proxy::DisplayData(int, int, int, int);
 	LPD3DXFONT m_font;
 	IDirect3DDevice9 *origIDirect3DDevice9;
+	bool fontCreated;
 private:
-	HDC* m_hdc;
-	HDC* m_hdc2;
-	HDC* m_hdc3;
+	std::vector<HDC*> m_hdc;
 };
 

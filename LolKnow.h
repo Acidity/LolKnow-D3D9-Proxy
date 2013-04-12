@@ -17,7 +17,6 @@ public:
 	static std::vector<Summoner> teamOne;
 	static std::vector<Summoner> teamTwo;
 	static bool completedDataTransfer;
-	static bool fontCreated;
 	static bool checkIfDataAvailable();
 	static void timerCheckForData(long);
 	static bool hasCreatedThread;

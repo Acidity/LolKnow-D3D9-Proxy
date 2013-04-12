@@ -8,7 +8,6 @@ vector<Summoner> LolKnow::teamTwo;
 int LolKnow::currentTeam = 1;
 int LolKnow::lineNumber = 0;
 bool LolKnow::completedDataTransfer = false;
-bool LolKnow::fontCreated = false;
 bool LolKnow::hasCreatedThread = false;
 
 LolKnow::LolKnow(void)
