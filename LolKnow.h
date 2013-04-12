@@ -1,3 +1,7 @@
+//Copyright 2013 Tyler O'Meara
+//Released under the Creative Commons Attribution 3.0 Unported License
+//See LICENSE for more details
+
 #pragma once
 
 #include <iostream>
