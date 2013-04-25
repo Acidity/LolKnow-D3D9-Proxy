@@ -157,13 +157,13 @@ HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 			bool isIdentical = true;
 
 			ss << &hdc;
-			DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 0, 200, 25, ss.str());
+			//DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 0, 200, 25, ss.str());
 
 			for(int x = 0; x < m_hdc.size(); x++)
 			{
 				ss = stringstream();
 				ss << m_hdc.at(x);
-				DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 50+(25*x), 200, 25, ss.str());
+				//DisplayText(D3DCOLOR_ARGB(255,255,255,255), 0, 50+(25*x), 200, 25, ss.str());
 
 				if(&hdc != m_hdc.at(x))
 				{
@@ -190,7 +190,7 @@ HRESULT IDirect3DDevice9Proxy::Present(CONST RECT* pSourceRect, CONST RECT* pDes
 			m_surface->Release();
 		}
 	}
-	
+
 	HRESULT res = (origIDirect3DDevice9->Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion));
 
 	if (callbacks[POSTPRESENT])
@@ -675,6 +675,12 @@ void IDirect3DDevice9Proxy::DisplayText(D3DCOLOR fontColor, int x, int y, int wi
 
 	// Draw some text 
 	m_font->DrawText(NULL, text.c_str(), -1, &rct, 0, fontColor );
+
+	{
+		m_font->Release();
+		fontCreated = false;
+	}
+
 }
 
 void IDirect3DDevice9Proxy::DisplayData(int team, int player, int x, int y)
